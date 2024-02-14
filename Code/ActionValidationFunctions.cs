@@ -13,12 +13,37 @@ namespace EchKode.PBMods.MutExEjectRetreatActions
 	{
 		public class InRetreatZone : ICombatActionValidationFunction
 		{
-			public bool IsValid(CombatEntity combatant) => IsInRetreatZone(combatant);
+			public bool IsValid(CombatEntity combatant) => IsSelectedUnitAndPlayerControlled(combatant)
+				? IsInRetreatZone(combatant)
+				: true;
 		}
 
 		public class NotInRetreatZone : ICombatActionValidationFunction
 		{
-			public bool IsValid(CombatEntity combatant) => !IsInRetreatZone(combatant);
+			public bool IsValid(CombatEntity combatant) => IsSelectedUnitAndPlayerControlled(combatant)
+				? !IsInRetreatZone(combatant)
+				: true;
+		}
+
+		static bool IsSelectedUnitAndPlayerControlled(CombatEntity combatant)
+		{
+			if (!Contexts.sharedInstance.combat.hasUnitSelected)
+			{
+				return false;
+			}
+			if (Contexts.sharedInstance.combat.unitSelected.id != combatant.id.id)
+			{
+				return false;
+			}
+			if (!combatant.isPlayerControllable)
+			{
+				return false;
+			}
+			if (Contexts.sharedInstance.input.combatUIMode.e != CombatUIModes.Unit_Selection)
+			{
+				return false;
+			}
+			return true;
 		}
 
 		static bool IsInRetreatZone(CombatEntity combatant)
@@ -38,16 +63,6 @@ namespace EchKode.PBMods.MutExEjectRetreatActions
 						: "null");
 			}
 
-			if (!combatant.isPlayerControllable)
-			{
-				return false;
-			}
-
-			if (Contexts.sharedInstance.input.combatUIMode.e != CombatUIModes.Unit_Selection)
-			{
-				return false;
-			}
-
 			var startPosition = combatant.position.v;
 			var startsInZone = HasRetreatZoneTag(combatant)
 				|| ScenarioUtility.IsRetreatAvailableAtPosition(startPosition);
@@ -55,6 +70,16 @@ namespace EchKode.PBMods.MutExEjectRetreatActions
 			var (moved, changed) = HasMovement(combatant);
 			if (!moved)
 			{
+				if (ModLink.Settings.logDiagnostics)
+				{
+					Debug.LogFormat(
+						"Mod {0} ({1}) retreat zone -- no movement | frame: {2} | combatant: {3} | in zone: {4}",
+						ModLink.modIndex,
+						ModLink.modID,
+						Time.frameCount,
+						combatant.ToLog(),
+						startsInZone);
+				}
 				return startsInZone;
 			}
 			if (changed && Patch.ProcessPathForUnit == null)
@@ -65,6 +90,17 @@ namespace EchKode.PBMods.MutExEjectRetreatActions
 				// position until the path is processed by PathLinker.
 				//
 				// Don't waste cycles on an incorrect path.
+
+				if (ModLink.Settings.logDiagnostics)
+				{
+					Debug.LogFormat(
+						"Mod {0} ({1}) retreat zone -- moved but no function to process path | frame: {2} | combatant: {3} | in zone: {4}",
+						ModLink.modIndex,
+						ModLink.modID,
+						Time.frameCount,
+						combatant.ToLog(),
+						startsInZone);
+				}
 
 				return startsInZone;
 			}
