@@ -1,0 +1,14 @@
+id: com.echkode.pbmods.mutexejectretreatactions
+ver: 1
+includesConfigOverrides: false
+includesConfigEdits: true
+includesLibraries: true
+includesTextures: false
+includesLocalizationEdits: false
+includesLocalizations: false
+gameVersionMin: 1.2.1
+gameVersionMax: 1.2.1
+name: MutExEjectRetreatActions
+desc: 'Make Eject and Retreat action buttons mutually exclusive.
+
+The eject action button will only appear for units outside evac/retreat zones while the retreat button will only appear when a unit is in an evac/retreat zone.'
